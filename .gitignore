@@ -1,0 +1,18 @@
+
+# WebStorm config
+.idea
+
+# OSX Desktop Services Store
+.DS_Store
+
+# emacs backup filenames
+*~
+
+# TSC generated assets
+# *.js
+# *.js.map
+
+# yarn/npm modules
+ 
+node_modules
+
