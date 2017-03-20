@@ -1,0 +1,16 @@
+[
+  {
+    "name": "jquery",
+    "src": "../../../node_modules/jquery/dist/jquery.min.js"
+  },
+  {
+    "name":"angular",
+    "src":"../../../node_modules/angular/angular.js"
+  },
+  {
+    "name":"./library"
+  },
+  {
+    "name":"./index"
+  }
+]

@@ -9,7 +9,7 @@ var microRequireModules = {};
 
 {
 
-    var loadResource = function( scriptPath, callback ) {
+    var loadResource = function( path, callback ) {
 
         var xhr = new XMLHttpRequest();
         var finished = false;
@@ -33,38 +33,42 @@ var microRequireModules = {};
             }
         };
 
-        xhr.open('GET', scriptPath);
+        xhr.open('GET', path);
         xhr.send();
     }
 
-    var setupModule = function( cursor, job ) {
+    var setupModule = function( cursor, moduleConfig ) {
 
-        console.info( "loading lib: " + job.moduleName );
+        console.info( "loading lib: " + moduleConfig.name );
 
 
-        loadResource( job.scriptPath, function (scriptText) {
+        loadResource( moduleConfig.src, function (scriptText) {
 
-            job.scriptText = scriptText;
+            moduleConfig.scriptText = scriptText;
 
-            if( job === cursor.current() ) {
+            if( moduleConfig === cursor.current() ) {
 
                 do {
 
                     {
                         window.exports = {};
 
-                        eval( job.scriptText );
+                        eval( moduleConfig.scriptText );
 
-                        microRequireModules[job.moduleName] = window.exports;
+                        // did the module `export` anything
+                        if( 0 < Object.keys(window.exports).length ) {
+
+                            microRequireModules[moduleConfig.name] = window.exports;
+                        }
+
                         delete window.exports;
 
-                        console.info( "loaded lib: " + job.moduleName );
-
+                        console.info( "loaded lib: " + moduleConfig.name );
                     }
 
-                    job = cursor.next();
+                    moduleConfig = cursor.next();
                 }
-                while( null != job && null != job.scriptText );
+                while( null != moduleConfig && null != moduleConfig.scriptText );
             } else {
                 // we are still waiting for an earlier library to load ... no-op
             }
@@ -72,18 +76,13 @@ var microRequireModules = {};
 
     }
 
-    var loadReqs = function( reqsList )  {
+    var setup = function( config )  {
 
-
-        var jobs = [];
-
-        for( var i = 0, count = reqsList.length; i < count; i++ ) {
-            var job = {
-                moduleName: reqsList[i],
-                scriptPath: reqsList[i] + ".js",
-                scriptText: null
+        for( var i = 0, count = config.length; i < count; i++ ) {
+            var moduleConfig = config[i];
+            if( !moduleConfig.src ) {
+                moduleConfig.src = moduleConfig.name + ".js"
             }
-            jobs.push( job );
         }
 
         var cursor = {
@@ -91,34 +90,30 @@ var microRequireModules = {};
             index: 0,
             next: function () {
                 cursor.index++;
-                if( cursor.index == jobs.length ) {
+                if( cursor.index == config.length ) {
                     return null;
                 }
-                var answer = jobs[cursor.index];
+                var answer = config[cursor.index];
                 return answer;
             },
             current: function () {
-                return jobs[cursor.index];
+                return config[cursor.index];
             }
         }
 
+        for( var i = 0, count = config.length; i < count; i++ ) {
 
-        for( var i = 0, count = jobs.length; i < count; i++ ) {
-
-            setupModule( cursor, jobs[i] );
-
+            setupModule( cursor, config[i] );
         }
     }
 
-    var reqsList = ["./library", "./index"];
-    loadReqs( reqsList );
+    loadResource( "./dinkyConfig.json", function (jsonText) {
 
-    var scripts = document.getElementsByTagName( "script" );
-    var foundElement = false;
-    for( var i = 0, count = scripts.length; i < count; i++ ) {
+        var config = JSON.parse( jsonText );
+        setup( config );
 
-        // var main =
-    }
+    } );
+
 }
 
 function require( lib ) {
