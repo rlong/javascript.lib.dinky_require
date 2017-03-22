@@ -53,7 +53,7 @@ var microRequireModules = {};
                     {
                         window.exports = {};
 
-                        eval( moduleConfig.scriptText );
+                        eval.apply( window, [moduleConfig.scriptText]);
 
                         // did the module `export` anything
                         if( 0 < Object.keys(window.exports).length ) {
