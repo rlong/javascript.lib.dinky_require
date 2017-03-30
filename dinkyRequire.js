@@ -9,14 +9,19 @@ var microRequireModules = {};
 
 {
 
-    var loadResource = function( path, callback ) {
+    var loadResource = function( path, callback, errorCallback ) {
 
         var xhr = new XMLHttpRequest();
         var finished = false;
 
         xhr.onabort = xhr.onerror = function xhrError() {
             finished = true;
-            console.error( xhr );
+            if( errorCallback ) {
+                errorCallback( xhr );
+            } else {
+                console.error( xhr );
+            }
+
         };
 
         xhr.onreadystatechange = function xhrStateChange() {
@@ -28,7 +33,11 @@ var microRequireModules = {};
                     callback( xhr.responseText );
 
                 } catch (e) {
-                    console.error( e );
+                    if( errorCallback ) {
+                        errorCallback( xhr );
+                    } else {
+                        console.error( e );
+                    }
                 }
             }
         };
@@ -39,7 +48,7 @@ var microRequireModules = {};
 
     var setupModule = function( cursor, moduleConfig ) {
 
-        console.info( "loading lib: " + moduleConfig.name );
+        // console.info( "loading lib: " + moduleConfig.name );
 
 
         loadResource( moduleConfig.src, function (scriptText) {
@@ -107,12 +116,18 @@ var microRequireModules = {};
         }
     }
 
-    loadResource( "./dinkyConfig.json", function (jsonText) {
+    loadResource( "./dinkyConfig.json",
+        function (jsonText) {
 
-        var config = JSON.parse( jsonText );
-        setup( config );
+            var config = JSON.parse( jsonText );
+            setup( config );
 
-    } );
+        },
+        function ( error ) {
+
+            console.error( "failed to load './dinkyConfig.json'");
+            console.error( error );
+        });
 
 }
 
